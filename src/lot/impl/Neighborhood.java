@@ -42,15 +42,11 @@ public class Neighborhood implements INeighborhood {
         return owned;
     }
 
-    public void incrementOwned() {
-        owned++;
-    }
-
-    public void decrementOwned() {
-        if (owned < 1) {
+    public void setOwned(int owned) {
+        this.owned = owned;
+        if (owned < 0) {
             throw new IllegalStateException("Illegal value encountered for owned estates in neighborhood!");
         }
-        owned--;
     }
 
     public Set<Estate> getEstates() {
@@ -64,9 +60,9 @@ public class Neighborhood implements INeighborhood {
     }
 
     public boolean equals(Object obj) {
-        if (obj instanceof Neighborhood) {
-            Neighborhood other = (Neighborhood)obj;
-            return type == other.type;
+        if (obj instanceof INeighborhood) {
+            INeighborhood other = (INeighborhood)obj;
+            return type == other.getType();
         }
         return false;
     }
@@ -78,6 +74,16 @@ public class Neighborhood implements INeighborhood {
         } else if (diff < 0) {
             return -1;
         }
-        return other.getType().ordinal() - type.ordinal();
+        diff = other.getType().ordinal() - type.ordinal();
+        if (diff > 0) {
+            return 1;
+        } else if (diff < 0) {
+            return -1;
+        }
+        return type.name().compareTo(other.getType().name());
+    }
+
+    public String toString() {
+        return type.name() + " (" + owned + "/" + size + ")";
     }
 }

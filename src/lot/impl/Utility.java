@@ -7,8 +7,9 @@ public class Utility extends Property implements IUtility {
     private final int oneUtilityMultiplier;
     private final int twoUtilityMultiplier;
 
-    public Utility(String name, int value, int mortgageValue, int oneUtilityMultiplier, int twoUtilityMultiplier) {
-        super(name, value, mortgageValue);
+    public Utility(String name, String formattedName, int value, int mortgageValue,
+                   int oneUtilityMultiplier, int twoUtilityMultiplier) {
+        super(name, formattedName, value, mortgageValue);
         this.oneUtilityMultiplier = oneUtilityMultiplier;
         this.twoUtilityMultiplier = twoUtilityMultiplier;
     }

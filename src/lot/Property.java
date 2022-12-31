@@ -9,8 +9,8 @@ public abstract class Property extends Lot implements IProperty {
 
     private Player owner;
 
-    public Property(String name, int value, int mortgageValue) {
-        super(name);
+    public Property(String name, String formattedName, int value, int mortgageValue) {
+        super(name, formattedName);
         this.value = value;
         this.mortgageValue = mortgageValue;
         this.owner = null;
@@ -52,7 +52,7 @@ public abstract class Property extends Lot implements IProperty {
         }
         if (this instanceof IRailroad && other instanceof IRailroad) {
             // railroads cannot be compared amongst each other
-            return 0;
+            return getName().compareTo(other.getName());
         }
         if (this instanceof Railroad) { // other is not a railroad
             return -1;
@@ -61,6 +61,6 @@ public abstract class Property extends Lot implements IProperty {
             return 1;
         }
         // must both be utilities, and utilities cannot be compared amongst each other
-        return 0;
+        return getName().compareTo(other.getName());
     }
 }

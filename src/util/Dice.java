@@ -12,7 +12,12 @@ public class Dice {
     }
 
     public Dice() {
-        random = new Random();
+        if (GameSettings.USE_SEED) {
+            random = new Random(GameSettings.SEED);
+        }
+        else {
+            random = new Random();
+        }
     }
 
     public int roll() {

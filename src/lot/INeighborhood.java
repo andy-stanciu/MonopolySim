@@ -12,10 +12,10 @@ public interface INeighborhood extends Comparable<INeighborhood> {
     int getSize();
     NeighborhoodType getType();
     int getOwned();
-    void incrementOwned();
-    void decrementOwned();
+    void setOwned(int owned);
     void setEstates(Board board);
     Set<Estate> getEstates();
     boolean equals(Object obj);
     int compareTo(INeighborhood other);
+    String toString();
 }

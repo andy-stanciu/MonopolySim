@@ -9,9 +9,9 @@ public class Railroad extends Property implements IRailroad {
     private final int threeRailroadRent;
     private final int fourRailroadRent;
 
-    public Railroad(String name, int value, int mortgageValue, int oneRailroadRent,
+    public Railroad(String name, String formattedName, int value, int mortgageValue, int oneRailroadRent,
                     int twoRailroadRent, int threeRailroadRent, int fourRailroadRent) {
-        super(name, value, mortgageValue);
+        super(name, formattedName, value, mortgageValue);
         this.oneRailroadRent = oneRailroadRent;
         this.twoRailroadRent = twoRailroadRent;
         this.threeRailroadRent = threeRailroadRent;

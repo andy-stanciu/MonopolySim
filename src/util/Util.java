@@ -2,20 +2,20 @@ package util;
 
 import lot.Property;
 
-import java.util.Set;
+import java.util.Collection;
 
 public class Util {
-    public static String formatSet(Set<Property> set) {
-        if (set.isEmpty()) {
+    public static String formatCollection(Collection<?> coll) {
+        if (coll.isEmpty()) {
             return "None";
         }
         StringBuilder sb = new StringBuilder();
         int i = 0;
-        for (Property property : set) {
+        for (Object object : coll) {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append(property);
+            sb.append(object);
             i++;
         }
         return sb.toString();

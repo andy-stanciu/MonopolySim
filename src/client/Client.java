@@ -1,3 +1,5 @@
+package client;
+
 import board.Board;
 import game.Game;
 import player.impl.Player;
@@ -14,7 +16,7 @@ public class Client {
         Player p3 = new Player(board, "Daddy");
         Player p4 = new Player(board, "Brula");
 
-        Game game = new Game(dice, p1, p2, p3, p4);
+        Game game = new Game(board, dice, p1, p2, p3, p4);
 
         for (int i = 0; i < GameSettings.TURNS; i++) {
             game.tick();

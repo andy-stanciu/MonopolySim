@@ -16,7 +16,7 @@ public class Player implements IPlayer {
     private final String name;
     private final TreeSet<Property> properties;
     private final Set<Property> mortgagedProperties;
-    private final Map<Neighborhood, Neighborhood> ownedNeighborhoods;
+    private final Map<NeighborhoodType, Neighborhood> ownedNeighborhoods;
 
     private int balance;
     private int position;
@@ -46,6 +46,10 @@ public class Player implements IPlayer {
 
     public int getPosition() {
         return position;
+    }
+
+    public Collection<Neighborhood> getOwnedNeighborhoods() {
+        return ownedNeighborhoods.values();
     }
 
     public TreeSet<Property> getProperties() {
@@ -89,18 +93,27 @@ public class Player implements IPlayer {
         while (debt < 0) {
             boolean liquidated = false;
             Iterator<Property> itr = properties.descendingIterator();
-            while (itr.hasNext()) {
+            int totalHousesLiquidated = 0;
+            String updatedEstates = "";
+            boolean overcameDebt = false;
+            while (itr.hasNext() && !overcameDebt) {
                 Property property = itr.next();
                 if (property instanceof Estate) {
                     Estate estate = (Estate)property;
                     if (estate.removeHouse()) {
                         debt += estate.getHouseCost();
                         liquidated = true;
+                        overcameDebt = debt >= 0;
+                        totalHousesLiquidated++;
+                        updatedEstates += updatedEstates.isEmpty() ? estate.getName() : ", " + estate.getName();
                     }
                 }
             }
             if (!liquidated) {
                 return false;
+            }
+            if (GameSettings.DEBUG) {
+                System.out.println(name + " liquidated " + totalHousesLiquidated + " houses on " + updatedEstates);
             }
         }
         return true;
@@ -211,15 +224,17 @@ public class Player implements IPlayer {
      * Tries to buy as many houses as affordable on all estates that are eligible for houses.
      * An estate is eligible for houses if this player owns all estates under its
      * neighborhood. Will buy houses until either no money is remaining or all estates have
-     * reached maximum house capacity (5).
+     * reached maximum house capacity (5). Starts by buying houses on the cheapest estates.
      */
     private void tryBuyHouses() {
-        for (Neighborhood neighborhood : ownedNeighborhoods.keySet()) {
+        for (NeighborhoodType key : ownedNeighborhoods.keySet()) {
+            Neighborhood neighborhood = ownedNeighborhoods.get(key);
             if (neighborhood.getSize() == neighborhood.getOwned()) {
                 Set<Estate> estates = neighborhood.getEstates();
                 int houseCost = neighborhood.getHouseCost();
 
                 int fullEstates = 0;
+                int totalHousesBought = 0;
                 while (canAfford(houseCost) && fullEstates < neighborhood.getSize()) {
                     fullEstates = 0;
                     Iterator<Estate> itr = estates.iterator();
@@ -228,10 +243,16 @@ public class Player implements IPlayer {
                         if (estate.canAddHouse()) {
                             decreaseBalance(houseCost);
                             estate.addHouse();
+                            totalHousesBought++;
                         } else {
                             fullEstates++;
                         }
                     }
+                }
+
+                if (GameSettings.DEBUG && totalHousesBought > 0) {
+                    System.out.println(name + " bought " + totalHousesBought + " houses on " +
+                            neighborhood + " for $" + totalHousesBought * houseCost);
                 }
             }
         }
@@ -249,7 +270,7 @@ public class Player implements IPlayer {
             Property property = (Property)lot;
             if (property.isOwned() && !property.getOwner().equals(this)) {
                 payRent(property, roll);
-            } else {
+            } else if (!property.isOwned()) {
                 tryPurchaseProperty(property);
             }
         } else if (lot instanceof Expense) {
@@ -289,11 +310,16 @@ public class Player implements IPlayer {
             throw new ClassCastException("Property " + property + " could not be cast!");
         }
 
+        if (GameSettings.DEBUG) {
+            System.out.println(name + " (Balance: $" + balance + ") was charged $" + rent + " by " +
+                    owner.name + " for landing on " + property.getName());
+        }
+
         tryDecreaseBalance(rent);
         owner.increaseBalance(rent);
 
         if (GameSettings.DEBUG) {
-            System.out.println(name + " sent $" + rent + " to " + owner.name + " for landing on " + property);
+            System.out.println(name + " sent $" + rent + " to " + owner.name + " for landing on " + property.getName());
         }
     }
 
@@ -313,8 +339,20 @@ public class Player implements IPlayer {
                 purchasedProperty = shouldBuyEstate(neighborhood);
 
                 if (purchasedProperty) {
-                    neighborhood.incrementOwned();
-                    ownedNeighborhoods.put(neighborhood, neighborhood);
+                    NeighborhoodType type = neighborhood.getType();
+                    Neighborhood ownedNeighborhood = ownedNeighborhoods.get(type);
+                    if (ownedNeighborhood == null) {
+                        neighborhood.setOwned(1);
+                        ownedNeighborhoods.put(type, neighborhood);
+                    } else {
+                        int owned = ownedNeighborhood.getOwned();
+                        for (Estate other : neighborhood.getEstates()) {
+                            if (this.equals(other.getOwner())) {
+                                other.getNeighborhood().setOwned(owned + 1);
+                            }
+                        }
+                        neighborhood.setOwned(owned + 1);
+                    }
                 }
             } else if (property instanceof Railroad) {
                 ownedRailroadCount++;
@@ -326,6 +364,10 @@ public class Player implements IPlayer {
                 decreaseBalance(property.getValue());
                 property.setOwner(this);
                 properties.add(property);
+
+                if (GameSettings.DEBUG) {
+                    System.out.println(name + " purchased " + property);
+                }
             }
         }
     }
@@ -339,9 +381,9 @@ public class Player implements IPlayer {
      * @return Whether the estate is worth buying.
      */
     private boolean shouldBuyEstate(Neighborhood neighborhood) {
-        Set<Neighborhood> neighborhoods = ownedNeighborhoods.keySet();
-        for (Neighborhood owned : neighborhoods) {
-            if (neighborhood.equals(owned)) {
+        Set<NeighborhoodType> neighborhoods = ownedNeighborhoods.keySet();
+        for (NeighborhoodType key : neighborhoods) {
+            if (neighborhood.equals(ownedNeighborhoods.get(key))) {
                 return true;
             }
         }
@@ -357,10 +399,19 @@ public class Player implements IPlayer {
         sb.append(name).append("\n");
         sb.append("Balance: $").append(balance).append("\n");
         sb.append("Position: ").append(board.getLotAt(position)).append("\n");
-        sb.append("Properties: ").append(Util.formatSet(properties)).append("\n");
-        sb.append("Mortgaged Properties: ").append(Util.formatSet(mortgagedProperties)).append("\n");
+        sb.append("Properties: ").append(Util.formatCollection(properties)).append("\n");
+        sb.append("Neighborhoods: ").append(Util.formatCollection(getOwnedNeighborhoods())).append("\n");
+        sb.append("Mortgaged Properties: ").append(Util.formatCollection(mortgagedProperties)).append("\n");
         sb.append("Total Jail Visits: ").append(totalJailVisits).append("\n");
         if (isInJail) sb.append("In Jail").append("\n");
         return sb.toString();
+    }
+
+    public boolean equals(Object other) {
+        if (other instanceof IPlayer) {
+            IPlayer player = (IPlayer)other;
+            return name.equals(player.getName());
+        }
+        return false;
     }
 }

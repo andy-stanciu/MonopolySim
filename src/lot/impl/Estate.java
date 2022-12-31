@@ -15,9 +15,9 @@ public class Estate extends Property implements IEstate {
 
     private int houses;
 
-    public Estate(String name, int value, int mortgageValue, Neighborhood neighborhood, int houseCost, int rent,
+    public Estate(String name, String formattedName, int value, int mortgageValue, Neighborhood neighborhood, int houseCost, int rent,
                   int oneHouseRent, int twoHouseRent, int threeHouseRent, int fourHouseRent, int hotelRent) {
-        super(name, value, mortgageValue);
+        super(name, formattedName, value, mortgageValue);
         this.neighborhood = neighborhood;
         this.houseCost = houseCost;
         this.rent = rent;
@@ -79,7 +79,7 @@ public class Estate extends Property implements IEstate {
         if (!neighborhood.equals(other.getNeighborhood())) {
             return neighborhood.compareTo(other.getNeighborhood());
         }
-        int diff = other.getRent() - rent;
+        int diff = other.getRent() - getRent();
         if (diff > 0) {
             return 1;
         }
