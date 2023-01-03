@@ -17,8 +17,6 @@ public class Client {
         Player p4 = new Player(board, "Brula");
 
         Game game = new Game(board, dice, p1, p2, p3, p4);
-        SelfTrimmingStack<Player> stack = new SelfTrimmingStack<>(10);
-        stack.push(p2);
 
 //        for (int i = 0; i < GameSettings.TURNS; i++) {
 //            game.tick();

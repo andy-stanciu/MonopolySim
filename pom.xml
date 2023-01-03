@@ -62,12 +62,6 @@
             <systemPath>${project.basedir}/src/main/resources/dependencies/SelfTrimmingStack-1.0.jar</systemPath>
             <classifier>javadoc</classifier>
         </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.4.1</version>
-            <type>maven-plugin</type>
-        </dependency>
     </dependencies>
 
 </project>
